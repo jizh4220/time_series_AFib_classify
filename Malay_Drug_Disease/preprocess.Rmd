@@ -1,0 +1,291 @@
+# Preprocess the inflated drug-disease occurence dataframe
+```{r}
+library(dplyr)
+library(openxlsx)
+library(readxl)
+library(ggplot2)
+```
+
+# fix the column names and fix the inflated many-to-one cases: a. drugs-to-disease b. disease-to-drugs
+```{r}
+xlsxname <- "/home/justinz/Malay_Drug_Disease/20233011-Drug_Disease.xlsx"
+df <- read_excel(xlsxname, sheet = 1)
+
+tmp <- colnames(df)
+tmp <- vapply(strsplit(tmp, " \\("), `[`, 1, FUN.VALUE = character(1))
+tmp <- gsub(" ", "_", tmp)
+
+colnames(df) <- tmp
+df <- as.data.frame(df)
+
+head(df)
+
+head(df)
+
+df <- df %>% 
+  group_by(PRESCRIPTION_ID) %>% 
+  mutate(across(c(DRUG_NAME, ICD_CODE), ~ifelse(duplicated(.), "DUPLICATED", .))) %>% 
+  ungroup()
+
+write.table(df, "/home/justinz/Malay_Drug_Disease/QC/test.csv", sep = ";")
+
+
+
+nkda <- grep("^Nil|^NA|`Nil|`NA", unique(c$ALLERGY), ignore.case = TRUE, value = TRUE)
+nkda <- grep("proxen|tab|capsule|or|NASID|NAD|only|allgery", nkda, invert = TRUE, ignore.case = TRUE, value = TRUE)
+unk <- grep("known|null", unique(c$ALLERGY), ignore.case = TRUE, value = TRUE)
+unk <- grep("un|no", unk, ignore.case = TRUE, value = TRUE)
+
+nkda <- c(nkda, unk)
+
+
+```
+
+```{r}
+library(stringr)
+output_dir <- "/home/justinz/Malay_Drug_Disease/QC/"
+# visualize the results
+# Create a table of drug occurrences
+
+drug_overview <- function(df, output_dir) {
+  drug_counts <- as.data.frame(table(df$DRUG_NAME))
+  colnames(drug_counts) <- c("Drug", "Count")
+
+  drug_counts$Count <- as.numeric(as.character(drug_counts$Count))
+  # Step 4: Limit the characters in 'Drug' up to the first blank space
+  drug_counts$Drug <- str_extract(drug_counts$Drug, "^\\S+")
+  drug_counts <- drug_counts[order(drug_counts$Count), ]
+
+  # 0%   25%   50%   75%  100% 
+  # 1     1     3    15 25148
+
+  quantile(drug_counts$Count)
+  # Calculate the 3rd quartile (75th percentile)
+  q3 <- quantile(drug_counts$Count, 0.75)
+
+  # Filter the data to include only the counts that are greater than or equal to the 3rd quartile
+  filtered_drug_counts <- drug_counts[drug_counts$Count >= q3 & drug_counts$Drug != "DUPLICATED", ]
+  quantile(filtered_drug_counts$Count)
+
+  # 0%     25%     50%     75%    100% 
+  # 15.00   25.00   50.50  131.25 2220.00 
+
+  filtered_drug_counts <- filtered_drug_counts[filtered_drug_counts$Count >= quantile(filtered_drug_counts$Count, 0.75) &
+              filtered_drug_counts$Drug != "DUPLICATED", ]
+
+  # Create the ggplot bar plot
+  p <- ggplot(filtered_drug_counts, aes(x = reorder(Drug, Count), y = Count)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    labs(x = "Drug", y = "Count", title = "Bar Plot of Drug Occurrences (merged with various dosages)") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust = 0.5))  # Center the title)
+
+
+  p_title <- paste0(output_dir, "drug_occurence_overview.png")
+  ggsave(filename = p_title,
+      plot = p, width = 10, height = 4, units = "in")
+
+
+  # zoom in top 20
+  top_drugs <- head(drug_counts[order(-drug_counts$Count), ], 20)
+
+  # Create the ggplot bar plot
+  p <- ggplot(top_drugs, aes(x = reorder(Drug, Count), y = Count)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    coord_flip() +
+    labs(x = "Drug", y = "Count", title = "Top Occurring Drugs") +
+    theme_minimal()  +
+    theme(axis.text.y = element_text(angle = 0, hjust = 1),
+          plot.title = element_text(hjust = 0.5))  # Center the title)
+
+  p_title <- paste0(output_dir, "top_occured_drugs.png")
+  ggsave(filename = p_title,
+      plot = p, width = 8, height = 6, units = "in")
+
+  # Remove the duplicates
+  p <- ggplot(top_drugs[top_drugs$Drug != "DUPLICATED", ], aes(x = reorder(Drug, Count), y = Count)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    coord_flip() +
+    labs(x = "Drug", y = "Count", title = "Top Occurring Drugs (no duplicates)") +
+    theme_minimal() +
+    theme(axis.text.y = element_text(angle = 0, hjust = 1),
+          plot.title = element_text(hjust = 0.5))  # Center the title)
+
+  p_title <- paste0(output_dir, "top_occured_drugs_NoDupl.png")
+  ggsave(filename = p_title,
+      plot = p, width = 8, height = 6, units = "in")
+}
+
+```
+
+# Do the same for disease
+```{r}
+disease_overview <- function(df, output_dir) {
+  disease_counts <- as.data.frame(table(df$ICD_CODE))
+  colnames(disease_counts) <- c("Disease", "Count")
+
+  disease_counts$Count <- as.numeric(as.character(disease_counts$Count))
+
+  disease_counts <- disease_counts[order(disease_counts$Count), ]
+  write.csv(disease_counts, paste0(output_dir, "disease_counts.csv"))
+
+  quantile(disease_counts$Count)
+  # Calculate the 3rd quartile (75th percentile)
+  q3 <- quantile(disease_counts$Count, 0.75)
+
+  # Filter the data to include only the counts that are greater than or equal to the 3rd quartile
+  filtered_disease_counts <- disease_counts[disease_counts$Count >= q3 & disease_counts$Disease != "DUPLICATED", ]
+  quantile(filtered_disease_counts$Count)
+
+  filtered_disease_counts <- filtered_disease_counts[filtered_disease_counts$Count >= quantile(filtered_disease_counts$Count, 0.75) &
+              filtered_disease_counts$Disease != "DUPLICATED", ]
+
+  # Create the ggplot bar plot
+  p <- ggplot(filtered_disease_counts, aes(x = reorder(Disease, Count), y = Count)) +
+    geom_bar(stat = "identity", fill = "firebrick") +
+    labs(x = "Disease", y = "Count", title = "Bar Plot of Disease Occurrences") +
+    theme_minimal() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust = 0.5))  # Center the title)
+
+
+  p_title <- paste0(output_dir, "disease_occurence_overview.png")
+  ggsave(filename = p_title,
+      plot = p, width = 10, height = 4, units = "in")
+
+
+  # zoom in top 20
+  top_diseases <- head(disease_counts[order(-disease_counts$Count), ], 20)
+
+  # Create the ggplot bar plot
+  p <- ggplot(top_diseases, aes(x = reorder(Disease, Count), y = Count)) +
+    geom_bar(stat = "identity", fill = "firebrick") +
+    coord_flip() +
+    labs(x = "Disease", y = "Count", title = "Top Occurring Diseases") +
+    theme_minimal()  +
+    theme(axis.text.y = element_text(angle = 0, hjust = 1),
+          plot.title = element_text(hjust = 0.5))  # Center the title)
+
+  p_title <- paste0(output_dir, "top_occured_diseases.png")
+  ggsave(filename = p_title,
+      plot = p, width = 8, height = 6, units = "in")
+
+  # Remove the duplicates
+  p <- ggplot(top_diseases[top_diseases$Disease != "DUPLICATED", ], aes(x = reorder(Disease, Count), y = Count)) +
+    geom_bar(stat = "identity", fill = "firebrick") +
+    coord_flip() +
+    labs(x = "Disease", y = "Count", title = "Top Occurring Diseases (no duplicates)") +
+    theme_minimal() +
+    theme(axis.text.y = element_text(angle = 0, hjust = 1),
+          plot.title = element_text(hjust = 0.5))  # Center the title)
+
+  p_title <- paste0(output_dir, "top_occured_diseases_NoDupl.png")
+  ggsave(filename = p_title,
+      plot = p, width = 8, height = 6, units = "in")
+}
+
+```
+
+# Let's merge all months from Janurary to November
+```{r}
+ps <- list()
+i <- 1
+kept_cols <- colnames(df)[c(1, 2, 4, 5, 10)]
+for (i in 1:11) {
+  df <- read_excel(xlsxname, sheet = i)
+  tmp <- colnames(df)
+  tmp <- vapply(strsplit(tmp, " \\("), `[`, 1, FUN.VALUE = character(1))
+  tmp <- gsub(" ", "_", tmp)
+
+  colnames(df) <- tmp
+  df <- as.data.frame(df)
+
+  df <- df %>% 
+    group_by(PRESCRIPTION_ID) %>% 
+    mutate(across(c(DRUG_NAME, ICD_CODE), ~ifelse(duplicated(.), "DUPLICATED", .))) %>% 
+    ungroup()
+
+  df <- df[, colnames(df) %in% kept_cols]
+  df <- as.data.frame(df)
+  df$month <- i
+  ps[[i]] <- df
+  
+}
+
+
+df <- do.call(rbind, ps)
+
+write.table(df, "/home/justinz/Malay_Drug_Disease/all_merged_df.txt", sep = ";")
+
+df <- NULL
+
+library(data.table)
+library(stringr)
+df <- fread("/home/justinz/Malay_Drug_Disease/all_merged_df.txt", sep = ";")
+df$drug <- str_extract(df$DRUG_NAME, "^\\S+")
+
+unique(df$DRUG_NAME)
+unique(df$ICD_CODE)
+
+# pre-filter entry
+table(df$month, df$DRUG_NAME)
+# post-filter entry
+
+f_df <- df[df$DRUG_NAME != "DUPLICATED" & df$ICD_CODE != "DUPLICATED", ]
+nrow(f_df)
+
+table(f_df$month)
+monthly_table <- rbind(table(df$month), table(f_df$month))
+
+
+
+rownames(monthly_table) <- c("pre", "post")
+colnames(monthly_table) <- month.abb[as.numeric(colnames(monthly_table))]
+
+monthly_table[2, ] / monthly_table[1, ]
+
+write.csv(monthly_table, "/home/justinz/Malay_Drug_Disease/QC/monthly_counts.csv")
+```
+
+
+
+
+```{r}
+install.packages("reshape2")
+# Reshape the dataframe from wide to long format
+df_long <- melt(monthly_table)
+
+# Create the density plot with trend lines
+p <- ggplot(df_long, aes(x=Var2, y=value, fill=Var1)) +
+  geom_bar(stat="identity", position="dodge") +
+  theme_minimal() +
+  theme(axis.text.y = element_text(angle = 0, hjust = 1),
+          plot.title = element_text(hjust = 0.5)) +
+  labs(x="Month", y="Count", fill="Filter", title = "Prescription Entry Counts ~ Month")
+
+p_title <- paste0(output_dir, "monthly_trend.png")
+ggsave(filename = p_title,
+     plot = p, width = 6, height = 3, units = "in")
+```
+
+# 5C80
+```{r}
+icd_pair <- c[, c("ICD_CODE", "ICD_CODE_DESCRIPTION")]
+icd_pair[grep("5C80", drug_disease_table$ICD_CODE), ]
+hypercholesterolaemia <- drug_disease_table[grep("5C80", drug_disease_table$ICD_CODE), ]
+head(hypercholesterolaemia)
+
+p <- ggplot(data = hypercholesterolaemia,
+            aes(x = ICD_CODE, fill = ICD_CODE)) +
+  geom_bar(stat = "count") +
+  theme_minimal()
+
+p_title <- paste0(cur_dir, "hypercholesterolaemia_occurence_test.png")
+ggsave(filename = p_title,
+     plot = p, width = 16, height = 8, units = "in")
+
+# see the corresponding drugs
+
+table(hypercholesterolaemia$DRUG_NAME)
+```

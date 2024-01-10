@@ -1,0 +1,90 @@
+```{r}
+# Top 5 drugs each month
+top_drugs <- df %>%
+  group_by(month, drug) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  arrange(month, desc(count)) %>%
+  group_by(month) %>%
+  slice_max(order_by = count, n = 5)
+
+# Top 5 diseases each month
+top_diseases <- df %>%
+  group_by(month, disease) %>%
+  summarise(count = n(), .groups = "drop") %>%
+  arrange(month, desc(count)) %>%
+  group_by(month) %>%
+  slice_max(order_by = count, n = 5)
+
+```
+
+```{r}
+# Plot for top 5 drugs each month
+ggplot(top_drugs, aes(x = month, y = count, fill = drug)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 5 Drugs Each Month", x = "Month", y = "Count", fill = "Drug")
+
+# Plot for top 5 diseases each month
+ggplot(top_diseases, aes(x = month, y = count, fill = disease)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Top 5 Diseases Each Month", x = "Month", y = "Count", fill = "Disease")
+
+```
+
+
+# Interquartile Range (IQR)
+
+## Frequency of drug and disease
+```{R}
+# Frequency of each drug
+drug_freq <- df %>%
+  group_by(drug) %>%
+  summarise(count = n(), .groups = "drop")
+
+# Frequency of each disease
+disease_freq <- df %>%
+  group_by(disease) %>%
+  summarise(count = n(), .groups = "drop")
+
+```
+
+
+## Outliers detection
+```{R}
+detect_outliers <- function(df, col_name) {
+  Q1 <- quantile(df$count, 0.25)
+  Q3 <- quantile(df$count, 0.75)
+  IQR <- Q3 - Q1
+  lower_bound <- Q1 - 1.5 * IQR
+  upper_bound <- Q3 + 1.5 * IQR
+  outliers <- df %>%
+    filter(count < lower_bound | count > upper_bound) %>%
+    arrange(desc(count))
+  return(outliers)
+}
+
+
+# Detect outliers in drug frequencies
+drug_outliers <- detect_outliers(drug_freq, "drug")
+
+# Detect outliers in disease frequencies
+disease_outliers <- detect_outliers(disease_freq, "disease")
+
+```
+
+## Visualization
+```{r}
+# Box plot for drug frequencies
+ggplot(drug_freq, aes(x = "", y = count)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.3, aes(color = drug %in% drug_outliers$drug)) +
+  labs(title = "Drug Frequencies", x = "", y = "Count", color = "Outlier") +
+  theme(legend.position = "bottom")
+
+# Box plot for disease frequencies
+ggplot(disease_freq, aes(x = "", y = count)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.3, aes(color = disease %in% disease_outliers$disease)) +
+  labs(title = "Disease Frequencies", x = "", y = "Count", color = "Outlier") +
+  theme(legend.position = "bottom")
+
+```
