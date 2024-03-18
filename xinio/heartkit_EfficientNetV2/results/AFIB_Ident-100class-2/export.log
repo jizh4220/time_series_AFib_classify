@@ -1,0 +1,259 @@
+Loading trained model
+Model: "EfficientNetV2"
+__________________________________________________________________________________________________
+ Layer (type)                Output Shape                 Param #   Connected to                  
+==================================================================================================
+ input (InputLayer)          [(None, 400, 1)]             0         []                            
+                                                                                                  
+ reshape (Reshape)           (None, 1, 400, 1)            0         ['input[0][0]']               
+                                                                                                  
+ stem.conv (Conv2D)          (None, 1, 200, 24)           72        ['reshape[0][0]']             
+                                                                                                  
+ stem.bn (BatchNormalizatio  (None, 1, 200, 24)           96        ['stem.conv[0][0]']           
+ n)                                                                                               
+                                                                                                  
+ stem.act (Activation)       (None, 1, 200, 24)           0         ['stem.bn[0][0]']             
+                                                                                                  
+ stage1.mbconv1.dp (Depthwi  (None, 1, 200, 24)           72        ['stem.act[0][0]']            
+ seConv2D)                                                                                        
+                                                                                                  
+ stage1.mbconv1.dp.bn (Batc  (None, 1, 200, 24)           96        ['stage1.mbconv1.dp[0][0]']   
+ hNormalization)                                                                                  
+                                                                                                  
+ stage1.mbconv1.dp.act (Act  (None, 1, 200, 24)           0         ['stage1.mbconv1.dp.bn[0][0]']
+ ivation)                                                                                         
+                                                                                                  
+ max_pooling2d (MaxPooling2  (None, 1, 100, 24)           0         ['stage1.mbconv1.dp.act[0][0]'
+ D)                                                                 ]                             
+                                                                                                  
+ stage1.mbconv1.se.pool (Gl  (None, 1, 1, 24)             0         ['max_pooling2d[0][0]']       
+ obalAveragePooling2D)                                                                            
+                                                                                                  
+ stage1.mbconv1.se.sq.conv   (None, 1, 1, 12)             300       ['stage1.mbconv1.se.pool[0][0]
+ (Conv2D)                                                           ']                            
+                                                                                                  
+ stage1.mbconv1.se.sq.act (  (None, 1, 1, 12)             0         ['stage1.mbconv1.se.sq.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ stage1.mbconv1.se.ex.conv   (None, 1, 1, 24)             312       ['stage1.mbconv1.se.sq.act[0][
+ (Conv2D)                                                           0]']                          
+                                                                                                  
+ stage1.mbconv1.se.ex.act (  (None, 1, 1, 24)             0         ['stage1.mbconv1.se.ex.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ multiply (Multiply)         (None, 1, 100, 24)           0         ['max_pooling2d[0][0]',       
+                                                                     'stage1.mbconv1.se.ex.act[0][
+                                                                    0]']                          
+                                                                                                  
+ stage1.mbconv1.red.conv (C  (None, 1, 100, 32)           768       ['multiply[0][0]']            
+ onv2D)                                                                                           
+                                                                                                  
+ stage1.mbconv1.red.bn (Bat  (None, 1, 100, 32)           128       ['stage1.mbconv1.red.conv[0][0
+ chNormalization)                                                   ]']                           
+                                                                                                  
+ stage1.mbconv2.dp (Depthwi  (None, 1, 100, 32)           96        ['stage1.mbconv1.red.bn[0][0]'
+ seConv2D)                                                          ]                             
+                                                                                                  
+ stage1.mbconv2.dp.bn (Batc  (None, 1, 100, 32)           128       ['stage1.mbconv2.dp[0][0]']   
+ hNormalization)                                                                                  
+                                                                                                  
+ stage1.mbconv2.dp.act (Act  (None, 1, 100, 32)           0         ['stage1.mbconv2.dp.bn[0][0]']
+ ivation)                                                                                         
+                                                                                                  
+ stage1.mbconv2.se.pool (Gl  (None, 1, 1, 32)             0         ['stage1.mbconv2.dp.act[0][0]'
+ obalAveragePooling2D)                                              ]                             
+                                                                                                  
+ stage1.mbconv2.se.sq.conv   (None, 1, 1, 16)             528       ['stage1.mbconv2.se.pool[0][0]
+ (Conv2D)                                                           ']                            
+                                                                                                  
+ stage1.mbconv2.se.sq.act (  (None, 1, 1, 16)             0         ['stage1.mbconv2.se.sq.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ stage1.mbconv2.se.ex.conv   (None, 1, 1, 32)             544       ['stage1.mbconv2.se.sq.act[0][
+ (Conv2D)                                                           0]']                          
+                                                                                                  
+ stage1.mbconv2.se.ex.act (  (None, 1, 1, 32)             0         ['stage1.mbconv2.se.ex.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ multiply_1 (Multiply)       (None, 1, 100, 32)           0         ['stage1.mbconv2.dp.act[0][0]'
+                                                                    , 'stage1.mbconv2.se.ex.act[0]
+                                                                    [0]']                         
+                                                                                                  
+ stage1.mbconv2.red.conv (C  (None, 1, 100, 32)           1024      ['multiply_1[0][0]']          
+ onv2D)                                                                                           
+                                                                                                  
+ stage1.mbconv2.red.bn (Bat  (None, 1, 100, 32)           128       ['stage1.mbconv2.red.conv[0][0
+ chNormalization)                                                   ]']                           
+                                                                                                  
+ stage1.mbconv2.res (Add)    (None, 1, 100, 32)           0         ['stage1.mbconv1.red.bn[0][0]'
+                                                                    , 'stage1.mbconv2.red.bn[0][0]
+                                                                    ']                            
+                                                                                                  
+ stage2.mbconv1.dp (Depthwi  (None, 1, 100, 32)           96        ['stage1.mbconv2.res[0][0]']  
+ seConv2D)                                                                                        
+                                                                                                  
+ stage2.mbconv1.dp.bn (Batc  (None, 1, 100, 32)           128       ['stage2.mbconv1.dp[0][0]']   
+ hNormalization)                                                                                  
+                                                                                                  
+ stage2.mbconv1.dp.act (Act  (None, 1, 100, 32)           0         ['stage2.mbconv1.dp.bn[0][0]']
+ ivation)                                                                                         
+                                                                                                  
+ max_pooling2d_1 (MaxPoolin  (None, 1, 50, 32)            0         ['stage2.mbconv1.dp.act[0][0]'
+ g2D)                                                               ]                             
+                                                                                                  
+ stage2.mbconv1.se.pool (Gl  (None, 1, 1, 32)             0         ['max_pooling2d_1[0][0]']     
+ obalAveragePooling2D)                                                                            
+                                                                                                  
+ stage2.mbconv1.se.sq.conv   (None, 1, 1, 8)              264       ['stage2.mbconv1.se.pool[0][0]
+ (Conv2D)                                                           ']                            
+                                                                                                  
+ stage2.mbconv1.se.sq.act (  (None, 1, 1, 8)              0         ['stage2.mbconv1.se.sq.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ stage2.mbconv1.se.ex.conv   (None, 1, 1, 32)             288       ['stage2.mbconv1.se.sq.act[0][
+ (Conv2D)                                                           0]']                          
+                                                                                                  
+ stage2.mbconv1.se.ex.act (  (None, 1, 1, 32)             0         ['stage2.mbconv1.se.ex.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ multiply_2 (Multiply)       (None, 1, 50, 32)            0         ['max_pooling2d_1[0][0]',     
+                                                                     'stage2.mbconv1.se.ex.act[0][
+                                                                    0]']                          
+                                                                                                  
+ stage2.mbconv1.red.conv (C  (None, 1, 50, 48)            1536      ['multiply_2[0][0]']          
+ onv2D)                                                                                           
+                                                                                                  
+ stage2.mbconv1.red.bn (Bat  (None, 1, 50, 48)            192       ['stage2.mbconv1.red.conv[0][0
+ chNormalization)                                                   ]']                           
+                                                                                                  
+ stage3.mbconv1.dp (Depthwi  (None, 1, 50, 48)            144       ['stage2.mbconv1.red.bn[0][0]'
+ seConv2D)                                                          ]                             
+                                                                                                  
+ stage3.mbconv1.dp.bn (Batc  (None, 1, 50, 48)            192       ['stage3.mbconv1.dp[0][0]']   
+ hNormalization)                                                                                  
+                                                                                                  
+ stage3.mbconv1.dp.act (Act  (None, 1, 50, 48)            0         ['stage3.mbconv1.dp.bn[0][0]']
+ ivation)                                                                                         
+                                                                                                  
+ max_pooling2d_2 (MaxPoolin  (None, 1, 25, 48)            0         ['stage3.mbconv1.dp.act[0][0]'
+ g2D)                                                               ]                             
+                                                                                                  
+ stage3.mbconv1.se.pool (Gl  (None, 1, 1, 48)             0         ['max_pooling2d_2[0][0]']     
+ obalAveragePooling2D)                                                                            
+                                                                                                  
+ stage3.mbconv1.se.sq.conv   (None, 1, 1, 12)             588       ['stage3.mbconv1.se.pool[0][0]
+ (Conv2D)                                                           ']                            
+                                                                                                  
+ stage3.mbconv1.se.sq.act (  (None, 1, 1, 12)             0         ['stage3.mbconv1.se.sq.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ stage3.mbconv1.se.ex.conv   (None, 1, 1, 48)             624       ['stage3.mbconv1.se.sq.act[0][
+ (Conv2D)                                                           0]']                          
+                                                                                                  
+ stage3.mbconv1.se.ex.act (  (None, 1, 1, 48)             0         ['stage3.mbconv1.se.ex.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ multiply_3 (Multiply)       (None, 1, 25, 48)            0         ['max_pooling2d_2[0][0]',     
+                                                                     'stage3.mbconv1.se.ex.act[0][
+                                                                    0]']                          
+                                                                                                  
+ stage3.mbconv1.red.conv (C  (None, 1, 25, 64)            3072      ['multiply_3[0][0]']          
+ onv2D)                                                                                           
+                                                                                                  
+ stage3.mbconv1.red.bn (Bat  (None, 1, 25, 64)            256       ['stage3.mbconv1.red.conv[0][0
+ chNormalization)                                                   ]']                           
+                                                                                                  
+ stage3.mbconv2.dp (Depthwi  (None, 1, 25, 64)            192       ['stage3.mbconv1.red.bn[0][0]'
+ seConv2D)                                                          ]                             
+                                                                                                  
+ stage3.mbconv2.dp.bn (Batc  (None, 1, 25, 64)            256       ['stage3.mbconv2.dp[0][0]']   
+ hNormalization)                                                                                  
+                                                                                                  
+ stage3.mbconv2.dp.act (Act  (None, 1, 25, 64)            0         ['stage3.mbconv2.dp.bn[0][0]']
+ ivation)                                                                                         
+                                                                                                  
+ stage3.mbconv2.se.pool (Gl  (None, 1, 1, 64)             0         ['stage3.mbconv2.dp.act[0][0]'
+ obalAveragePooling2D)                                              ]                             
+                                                                                                  
+ stage3.mbconv2.se.sq.conv   (None, 1, 1, 16)             1040      ['stage3.mbconv2.se.pool[0][0]
+ (Conv2D)                                                           ']                            
+                                                                                                  
+ stage3.mbconv2.se.sq.act (  (None, 1, 1, 16)             0         ['stage3.mbconv2.se.sq.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ stage3.mbconv2.se.ex.conv   (None, 1, 1, 64)             1088      ['stage3.mbconv2.se.sq.act[0][
+ (Conv2D)                                                           0]']                          
+                                                                                                  
+ stage3.mbconv2.se.ex.act (  (None, 1, 1, 64)             0         ['stage3.mbconv2.se.ex.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ multiply_4 (Multiply)       (None, 1, 25, 64)            0         ['stage3.mbconv2.dp.act[0][0]'
+                                                                    , 'stage3.mbconv2.se.ex.act[0]
+                                                                    [0]']                         
+                                                                                                  
+ stage3.mbconv2.red.conv (C  (None, 1, 25, 64)            4096      ['multiply_4[0][0]']          
+ onv2D)                                                                                           
+                                                                                                  
+ stage3.mbconv2.red.bn (Bat  (None, 1, 25, 64)            256       ['stage3.mbconv2.red.conv[0][0
+ chNormalization)                                                   ]']                           
+                                                                                                  
+ stage3.mbconv2.res (Add)    (None, 1, 25, 64)            0         ['stage3.mbconv1.red.bn[0][0]'
+                                                                    , 'stage3.mbconv2.red.bn[0][0]
+                                                                    ']                            
+                                                                                                  
+ stage4.mbconv1.dp (Depthwi  (None, 1, 25, 64)            192       ['stage3.mbconv2.res[0][0]']  
+ seConv2D)                                                                                        
+                                                                                                  
+ stage4.mbconv1.dp.bn (Batc  (None, 1, 25, 64)            256       ['stage4.mbconv1.dp[0][0]']   
+ hNormalization)                                                                                  
+                                                                                                  
+ stage4.mbconv1.dp.act (Act  (None, 1, 25, 64)            0         ['stage4.mbconv1.dp.bn[0][0]']
+ ivation)                                                                                         
+                                                                                                  
+ max_pooling2d_3 (MaxPoolin  (None, 1, 13, 64)            0         ['stage4.mbconv1.dp.act[0][0]'
+ g2D)                                                               ]                             
+                                                                                                  
+ stage4.mbconv1.se.pool (Gl  (None, 1, 1, 64)             0         ['max_pooling2d_3[0][0]']     
+ obalAveragePooling2D)                                                                            
+                                                                                                  
+ stage4.mbconv1.se.sq.conv   (None, 1, 1, 16)             1040      ['stage4.mbconv1.se.pool[0][0]
+ (Conv2D)                                                           ']                            
+                                                                                                  
+ stage4.mbconv1.se.sq.act (  (None, 1, 1, 16)             0         ['stage4.mbconv1.se.sq.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ stage4.mbconv1.se.ex.conv   (None, 1, 1, 64)             1088      ['stage4.mbconv1.se.sq.act[0][
+ (Conv2D)                                                           0]']                          
+                                                                                                  
+ stage4.mbconv1.se.ex.act (  (None, 1, 1, 64)             0         ['stage4.mbconv1.se.ex.conv[0]
+ Activation)                                                        [0]']                         
+                                                                                                  
+ multiply_5 (Multiply)       (None, 1, 13, 64)            0         ['max_pooling2d_3[0][0]',     
+                                                                     'stage4.mbconv1.se.ex.act[0][
+                                                                    0]']                          
+                                                                                                  
+ stage4.mbconv1.red.conv (C  (None, 1, 13, 80)            5120      ['multiply_5[0][0]']          
+ onv2D)                                                                                           
+                                                                                                  
+ stage4.mbconv1.red.bn (Bat  (None, 1, 13, 80)            320       ['stage4.mbconv1.red.conv[0][0
+ chNormalization)                                                   ]']                           
+                                                                                                  
+ top.pool (GlobalAveragePoo  (None, 80)                   0         ['stage4.mbconv1.red.bn[0][0]'
+ ling2D)                                                            ]                             
+                                                                                                  
+ top (Dense)                 (None, 2)                    162       ['top.pool[0][0]']            
+                                                                                                  
+==================================================================================================
+Total params: 26778 (104.60 KB)
+Trainable params: 25562 (99.85 KB)
+Non-trainable params: 1216 (4.75 KB)
+__________________________________________________________________________________________________
+Model requires 1.19 MFLOPS
+Converting model to TFLite (quantization=True)
+Saving TFLite model to results/AFIB_Ident-100class-2/model.tflite
+Saving TFL micro model to results/AFIB_Ident-100class-2/model_buffer.h
+Validating model results
+[TEST SET] ACC=94.38%, F1=94.37%, Precision=94.43%, Sensitivity= 94.38%, AUC-ROC= 94.36%
+[TFL SET] ACC=94.45%, F1=94.44%
+Validation passed (0.00%)
+Copying TFLM header to results/AFIB_Ident-100class-2/AFIB_Ident_model_buffer.h
