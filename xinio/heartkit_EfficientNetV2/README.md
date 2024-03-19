@@ -73,6 +73,8 @@ dataset.download(
 )
 ```
 
+You can refer to [notebook](./notebook/download.ipynb) for downloading necessary datasets.
+
 ## Incentia11k Data Structure
 
 You can find the h5 files for the Incentia11k dataset in the following directory: `~/heartkit/datasets/icentia11k`.
@@ -187,6 +189,8 @@ for _, segments in single_pat_gen:
 
 The arrhythmia models utilizes a variation of [EfficientNetV2: Smaller Models and Faster Training](https://arxiv.org/abs/2104.00298) that is adapted for 1-D time series data. The model is a 1-D CNN built using [MBConv](https://paperswithcode.com/method/inverted-residual-block) style blocks that incorporate expansion, inverted residuals, and squeeze and excitation layers. Furthermore, longer filter and stride lengths are utilized in the initial layers to capture more temporal dependencies.
 
+You can refer to [notebook](./notebook/efficientNet.ipynb) for the EfficientNetV2 definition code blocks and [notebook](./notebook/model_architecture.ipynb "Interactive Visualization of Model Architecture") for the trained model architecture from keras.
+
 ### Preprocessing
 
 The models are trained directly on single channel ECG data. No feature extraction is performed other than applying a bandpass filter ([1, 30]) to remove noise followed by downsampling. The signal is then z-normed. We also add a small epsilon value to the standard deviation to avoid division by zero.
@@ -196,6 +200,9 @@ The models are trained directly on single channel ECG data. No feature extractio
     | -------- | ---------------- |
     | 0        | NSR              |
     | 1        | AFIB, AFL        |
+
+You can refer to [notebook](./notebook/preprocess_test.ipynb) for the bandpass filtering effects on the overall ECG signals.
+
 
 ### Evaluation Metrics
 
@@ -210,6 +217,14 @@ For each dataset, 10% of the data is held out for testing (p10000~p10999). From 
     | Precision | 94.43%  |
     | Sensitivity | 94.38%  |
     | AUC-ROC | 94.36%  |
+
+### Patients size
+train patient size: 10000 (p00000~p09999)
+test patient size: 1000 (p10000~p10999)
+validation patient size: 10000 * 0.2 = 2000, randomly selected every time of training
+
+
+### Driver functions for training
 
 
 ## Incentia11k Model Validation
