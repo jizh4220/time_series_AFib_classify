@@ -1105,6 +1105,6 @@ class AFIB_Ident(HKTask):
 
             print(np.sum(ratios) / (len(y_pred) / 400))
             whole_seg_pred.append(ratios)
-        NotImplementedError
+        
 
         

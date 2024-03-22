@@ -813,6 +813,7 @@ class IcentiaDataset(HKDataset):
             # END FOR
         # END FOR
                 
+                
     def continous_signal_label_generator(self, patient_generator: PatientGenerator, selected_time: int = 15) -> SignalMetaGenerator:
         """Generate continous frames using patient generator.
 
