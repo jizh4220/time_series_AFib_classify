@@ -27,7 +27,7 @@ from typing import List, Tuple, Dict
 from ..defines import HeartBeat, HeartRate, HeartRhythm, HeartSegment
 from ..utils import download_file
 from .dataset import HKDataset
-from .defines import PatientGenerator, SampleGenerator, SignalMetaGenerator
+from .defines import PatientGenerator, SampleGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -433,6 +433,7 @@ class IcentiaDataset(HKDataset):
                 else:
                     print("All arrays in pt_tgt_seg_map are empty.")
                     continue
+
                 noise_seg = []
                 # Iterate over the original array
                 for i in range(len(pt_tgt_seg_map)-1):
@@ -754,7 +755,7 @@ class IcentiaDataset(HKDataset):
             # END FOR
         # END FOR
     
-    def signal_label_generator(self, patient_generator: PatientGenerator, samples_per_patient: int = 1) -> SignalMetaGenerator:
+    def signal_label_generator(self, patient_generator: PatientGenerator, samples_per_patient: int = 1) -> SampleGenerator:
         """Generate random frames using patient generator.
 
         Args:
@@ -763,7 +764,7 @@ class IcentiaDataset(HKDataset):
             samples_per_patient (int): Samples per patient. should be 1 in this case
 
         Returns:
-            SignalMetaGenerator: Generator of signal and their corresponding label (frame_size, 1)
+            SampleGenerator: Generator of signal and their corresponding label (frame_size, 1)
         """
         # tgt_map = {k: self.class_map.get(v, -1) for (k, v) in HeartRhythmMap.items()}
         # class_map = get_class_mapping(self.num_classes)
@@ -832,7 +833,7 @@ class IcentiaDataset(HKDataset):
             # END FOR
         # END FOR
                 
-    def signal_label_TimeFrame_generator(self, patient_generator: PatientGenerator, segment_idx, frame_start, frame_end) -> SignalMetaGenerator:
+    def signal_label_TimeFrame_generator(self, patient_generator: PatientGenerator, segment_idx, frame_start, frame_end) -> SampleGenerator:
         """Generate random frames using patient generator.
 
         Args:
@@ -841,7 +842,7 @@ class IcentiaDataset(HKDataset):
             samples_per_patient (int): Samples per patient. should be 1 in this case
 
         Returns:
-            SignalMetaGenerator: Generator of signal and their corresponding label (frame_size, 1)
+            SampleGenerator: Generator of signal and their corresponding label (frame_size, 1)
         """
         for _, segments in patient_generator:
             segment_id = list(segments.keys())[segment_idx]
@@ -885,7 +886,7 @@ class IcentiaDataset(HKDataset):
         # END FOR
 
     # TODO: upgrade the main inferen driver
-    def signal_label_segment_generator(self, patient_generator: PatientGenerator, segment_idx, timerange=range(60)) -> SignalMetaGenerator:
+    def signal_label_segment_generator(self, patient_generator: PatientGenerator, segment_idx, timerange=range(60)) -> SampleGenerator:
         """Generate random frames using patient generator.
 
         Args:
@@ -894,7 +895,7 @@ class IcentiaDataset(HKDataset):
             samples_per_patient (int): Samples per patient. should be 1 in this case
 
         Returns:
-            SignalMetaGenerator: Generator of signal and their corresponding label (frame_size, 1)
+            SampleGenerator: Generator of signal and their corresponding label (frame_size, 1)
         """
         for _, segments in patient_generator:
             segment_id = list(segments.keys())[segment_idx]
@@ -908,8 +909,8 @@ class IcentiaDataset(HKDataset):
                 frame_end = timerange[1]
                 # print(f"frame ends here: {self.target_rate}, {timerange[-1]+1}")
                 if rlabels[:, 0][-1] < frame_end:
-                    # print("Get to the end of the segment")
-                    frame_end = rlabels[:, 0][-1]
+                    print("Current sample is larger than the maximal frame size")
+                    continue
                 # an rlabel array for the whole segment
                 whole_seg_rlabels = np.zeros(rlabels[:, 0][-1])
                 pos_start = rlabels[:, 0][(rlabels[:, 1] != 0) & (rlabels[:, 1] != 4)]
@@ -919,6 +920,7 @@ class IcentiaDataset(HKDataset):
                 for i in range(len(pos_ranges)):
                     start, end = pos_ranges[i]
                     whole_seg_rlabels[start:end] = pos_idx[i]
+                
                 
                 frame_rlabel = whole_seg_rlabels[frame_start:frame_end]
                 # print(f"Double check {frame_rlabel}")
@@ -934,7 +936,7 @@ class IcentiaDataset(HKDataset):
             # END FOR
         # END FOR
             
-    def signal_rblabel_generator(self, patient_generator: PatientGenerator, segment_idx="all", timerange=None) -> SignalMetaGenerator:
+    def signal_rblabel_generator(self, patient_generator: PatientGenerator, segment_idx="all", timerange=None) -> SampleGenerator:
         """Generate random frames using patient generator.
 
         Args:
@@ -943,7 +945,7 @@ class IcentiaDataset(HKDataset):
             samples_per_patient (int): Samples per patient. should be 1 in this case
 
         Returns:
-            SignalMetaGenerator: Generator of signal and their corresponding label (frame_size, 1)
+            SampleGenerator: Generator of signal and their corresponding label (frame_size, 1)
         """
         for _, segments in patient_generator:
             segment_id = list(segments.keys())[segment_idx]
@@ -1001,7 +1003,7 @@ class IcentiaDataset(HKDataset):
         # END FOR
                 
 
-    def continous_signal_label_generator(self, patient_generator: PatientGenerator, selected_time: int = 15) -> SignalMetaGenerator:
+    def continous_signal_label_generator(self, patient_generator: PatientGenerator, selected_time: int = 15) -> SampleGenerator:
         """Generate continous frames using patient generator.
 
         Args:
@@ -1010,7 +1012,7 @@ class IcentiaDataset(HKDataset):
             selected_time (int): Number of minutes per patient
 
         Returns:
-            SignalMetaGenerator: Generator of signal and their corresponding label (frame_size, 1)
+            SampleGenerator: Generator of signal and their corresponding label (frame_size, 1)
         """
         # tgt_map = {k: self.class_map.get(v, -1) for (k, v) in HeartRhythmMap.items()}
         # class_map = get_class_mapping(self.num_classes)
@@ -1081,7 +1083,7 @@ class IcentiaDataset(HKDataset):
             # merged_seg = pd.DataFrame(all_segment_results)
             yield merged_seg
         
-    
+
 
     def uniform_patient_generator(
         self,
@@ -1214,7 +1216,7 @@ class IcentiaDataset(HKDataset):
                     return True
             return False
     
-    def get_pseg_ref(self, patient_generator: PatientGenerator, segment_idx) -> SignalMetaGenerator:
+    def get_pseg_ref(self, patient_generator: PatientGenerator, segment_idx) -> SampleGenerator:
         """Generate random frames using patient generator.
 
         Args:
@@ -1223,7 +1225,7 @@ class IcentiaDataset(HKDataset):
             samples_per_patient (int): Samples per patient. should be 1 in this case
 
         Returns:
-            SignalMetaGenerator: Generator of signal and their corresponding label (frame_size, 1)
+            SampleGenerator: Generator of signal and their corresponding label (frame_size, 1)
         """
         for _, segments in patient_generator:
             segment_id = list(segments.keys())[segment_idx]

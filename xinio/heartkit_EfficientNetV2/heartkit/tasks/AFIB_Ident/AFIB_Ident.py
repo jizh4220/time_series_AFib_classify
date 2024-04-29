@@ -12,13 +12,10 @@ import tensorflow as tf
 import tensorflow_model_optimization as tfmot
 import wandb
 from plotly.subplots import make_subplots
-from sklearn.metrics import f1_score
 from tqdm import tqdm
 from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
 
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import precision_score, recall_score, roc_auc_score, f1_score
 
 
 from ... import tflite as tfa
@@ -67,7 +64,7 @@ logger = setup_logger(__name__)
 
 
 class AFIB_Ident(HKTask):
-    """d24h AFIB Identification Task"""
+    """Xinio AFIB Identification Task"""
 
     @staticmethod
     def train(params: HKTrainParams):
@@ -1002,7 +999,7 @@ class AFIB_Ident(HKTask):
 
 
     @staticmethod
-    def continous_minute_evaluation(params: HKDemoParams, pid: int):
+    def continous_minute_evaluation(params: HKDemoParams, pid: int, sid: int, start: int, end: int):
         bg_color = "rgba(38,42,50,1.0)"
         primary_color = "#11acd5"
         plotly_template = "plotly_dark"
@@ -1105,6 +1102,6 @@ class AFIB_Ident(HKTask):
 
             print(np.sum(ratios) / (len(y_pred) / 400))
             whole_seg_pred.append(ratios)
-        
+        NotImplementedError
 
         
